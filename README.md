@@ -10,37 +10,37 @@ Pre-requisites:
 2.1) Optional - Put your pre-configured installimage config into ´/autosetup´ using nano or vi
 
 Sample config:
+```bash
+##  Hetzner Online GmbH - installimage - config
 
-  ##  Hetzner Online GmbH - installimage - config
+##  HARD DISK DRIVE(S):
+# Onboard: ST4000NM0024-1HT178
+DRIVE1 /dev/sda
+# Onboard: ST4000NM0024-1HT178
+DRIVE2 /dev/sdb
 
-  ##  HARD DISK DRIVE(S):
-  # Onboard: ST4000NM0024-1HT178
-  DRIVE1 /dev/sda
-  # Onboard: ST4000NM0024-1HT178
-  DRIVE2 /dev/sdb
+##  SOFTWARE RAID:
+## activate software RAID?  < 0 | 1 >
+SWRAID 1
 
-  ##  SOFTWARE RAID:
-  ## activate software RAID?  < 0 | 1 >
-  SWRAID 1
+## Choose the level for the software RAID < 0 | 1 | 10 >
+SWRAIDLEVEL 0
 
-  ## Choose the level for the software RAID < 0 | 1 | 10 >
-  SWRAIDLEVEL 0
+##  BOOTLOADER:
+BOOTLOADER grub
 
-  ##  BOOTLOADER:
-  BOOTLOADER grub
+##  HOSTNAME:
+HOSTNAME server
 
-  ##  HOSTNAME:
-  HOSTNAME server
+##  PARTITIONS / FILESYSTEMS:
+PART /boot  ext3     2G
+PART lvm    vg0       all
 
-  ##  PARTITIONS / FILESYSTEMS:
-  PART /boot  ext3     2G
-  PART lvm    vg0       all
+LV vg0   swap   swap     swap         64G
+LV vg0   root   /        ext4         all
 
-  LV vg0   swap   swap     swap         64G
-  LV vg0   root   /        ext4         all
-
-  ##  OPERATING SYSTEM IMAGE:
-  IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-1804-bionic-64-minimal.tar.gz
+##  OPERATING SYSTEM IMAGE:
+IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-1804-bionic-64-minimal.tar.gz```
 
 2.2) Run the command ´installimage´. If a config is not already in place then it will prompt you to create one with some on-screen menus.
 
@@ -84,87 +84,87 @@ You can have multiple keys in this file. Using a seperate SSH key for dropbear i
   nano cryptsetup-fix.sh
 
 Paste the following script into cryptsetup-fix.sh:
+```bash
+#!/bin/sh
 
-  #!/bin/sh
+# This hook is for fixing busybox-initramfs issue while unlocking a luks
+# encrypted rootfs. The problem is that the included busybox version
+# is stripped down to the point that it breaks cryptroot-unlock script:
+# https://bugs.launchpad.net/ubuntu/+source/busybox/+bug/1651818
 
-  # This hook is for fixing busybox-initramfs issue while unlocking a luks
-  # encrypted rootfs. The problem is that the included busybox version
-  # is stripped down to the point that it breaks cryptroot-unlock script:
-  # https://bugs.launchpad.net/ubuntu/+source/busybox/+bug/1651818
+# This is a non-aggressive fix based on the original busybox-initramfs hook
+# until the bug is fixed.
+# busybox or busybox-static package must be present for this to work
 
-  # This is a non-aggressive fix based on the original busybox-initramfs hook
-  # until the bug is fixed.
-  # busybox or busybox-static package must be present for this to work
+# This file should be placed in /etc/initramfs-tools/hooks/ and have +x flag set
+# after that you need to rebuild the initramfs with 'update-initramfs -u'
 
-  # This file should be placed in /etc/initramfs-tools/hooks/ and have +x flag set
-  # after that you need to rebuild the initramfs with 'update-initramfs -u'
+# Users reported the solution working on at least:
+# Ubuntu 17.04, 17.10, 18.04
 
-  # Users reported the solution working on at least:
-  # Ubuntu 17.04, 17.10, 18.04
+# Also note that this does not replace busybox-initramfs package.
+# The package must be present, this hook just fixes what's broken.
 
-  # Also note that this does not replace busybox-initramfs package.
-  # The package must be present, this hook just fixes what's broken.
+# Hamy - www.hamy.io
 
-  # Hamy - www.hamy.io
+set -e
 
-  set -e
+case "${1:-}" in
+  prereqs)  echo ""; exit 0;;
+esac
 
-  case "${1:-}" in
-    prereqs)  echo ""; exit 0;;
+[ n = "$BUSYBOX" ] && exit 0
+
+[ -r /usr/share/initramfs-tools/hook-functions ] || exit 0
+. /usr/share/initramfs-tools/hook-functions
+
+# Testing the presence of busybox-initramfs hook
+[ -x /usr/share/initramfs-tools/hooks/zz-busybox-initramfs ] || exit 0
+
+# The original busybox binary added by busybox-initramfs
+BB_BIN_ORG=$DESTDIR/bin/busybox
+[ -x $BB_BIN_ORG ] || exit 0
+
+# The one we want to replace it with
+[ -x /bin/busybox ] || exit 0
+BB_BIN=/bin/busybox
+
+# Ensure the original busybox lacks extended options
+# and the soon-to-be-replaced-by one does not
+if $BB_BIN_ORG ps -eo pid,args >/dev/null 2>&1; then
+  exit 0
+elif ! $BB_BIN ps -eo pid,args >/dev/null 2>&1; then
+  exit 0
+fi
+
+# Get the inode number of busybox-initramfs binary
+BB_BIN_ORG_IND=$(stat --format=%i $BB_BIN_ORG)
+
+# Replace the binary
+rm -f $BB_BIN_ORG
+copy_exec $BB_BIN /bin/busybox
+
+echo -n "Fixing busybox-initramfs for:"
+
+for alias in $($BB_BIN --list-long); do
+  alias="${alias#/}"
+  case "$alias" in
+    # strip leading /usr, we don't use it
+    usr/*) alias="${alias#usr/}" ;;
+    */*) ;;
+    *) alias="bin/$alias" ;;  # make it into /bin
   esac
 
-  [ n = "$BUSYBOX" ] && exit 0
-
-  [ -r /usr/share/initramfs-tools/hook-functions ] || exit 0
-  . /usr/share/initramfs-tools/hook-functions
-
-  # Testing the presence of busybox-initramfs hook
-  [ -x /usr/share/initramfs-tools/hooks/zz-busybox-initramfs ] || exit 0
-
-  # The original busybox binary added by busybox-initramfs
-  BB_BIN_ORG=$DESTDIR/bin/busybox
-  [ -x $BB_BIN_ORG ] || exit 0
-
-  # The one we want to replace it with
-  [ -x /bin/busybox ] || exit 0
-  BB_BIN=/bin/busybox
-
-  # Ensure the original busybox lacks extended options
-  # and the soon-to-be-replaced-by one does not
-  if $BB_BIN_ORG ps -eo pid,args >/dev/null 2>&1; then
-    exit 0
-  elif ! $BB_BIN ps -eo pid,args >/dev/null 2>&1; then
-    exit 0
+  # Remove (and then re-add) all the hardlinks added by busybox-initramfs
+  if [ -e "$DESTDIR/$alias" ] && [ $(stat --format=%i "$DESTDIR/$alias") -eq $BB_BIN_ORG_IND ]; then
+      echo -n " ${alias##*/}"
+      rm -f "$DESTDIR/$alias"
+      ln "$DESTDIR/bin/busybox" "$DESTDIR/$alias"
   fi
+done
 
-  # Get the inode number of busybox-initramfs binary
-  BB_BIN_ORG_IND=$(stat --format=%i $BB_BIN_ORG)
-
-  # Replace the binary
-  rm -f $BB_BIN_ORG
-  copy_exec $BB_BIN /bin/busybox
-
-  echo -n "Fixing busybox-initramfs for:"
-
-  for alias in $($BB_BIN --list-long); do
-    alias="${alias#/}"
-    case "$alias" in
-      # strip leading /usr, we don't use it
-      usr/*) alias="${alias#usr/}" ;;
-      */*) ;;
-      *) alias="bin/$alias" ;;  # make it into /bin
-    esac
-
-    # Remove (and then re-add) all the hardlinks added by busybox-initramfs
-    if [ -e "$DESTDIR/$alias" ] && [ $(stat --format=%i "$DESTDIR/$alias") -eq $BB_BIN_ORG_IND ]; then
-        echo -n " ${alias##*/}"
-        rm -f "$DESTDIR/$alias"
-        ln "$DESTDIR/bin/busybox" "$DESTDIR/$alias"
-    fi
-  done
-
-  # To get a trailing new line
-  echo
+# To get a trailing new line
+echo```
 
 and make the script executable:
 
@@ -201,13 +201,13 @@ This will scan for existing Volume Groups and activate them.
   vgremove vg0
 
 You will see a series of prompts, to which you must answer YES, for example:
-
-  Do you really want to remove volume group "vg0" containing 2 logical volumes? [y/n]: y
-  Do you really want to remove active logical volume swap? [y/n]: y
-    Logical volume "swap" successfully removed
-  Do you really want to remove active logical volume root? [y/n]: y
-    Logical volume "root" successfully removed
-    Volume group "vg0" successfully removed
+```bash
+Do you really want to remove volume group "vg0" containing 2 logical volumes? [y/n]: y
+Do you really want to remove active logical volume swap? [y/n]: y
+  Logical volume "swap" successfully removed
+Do you really want to remove active logical volume root? [y/n]: y
+  Logical volume "root" successfully removed
+  Volume group "vg0" successfully removed```
 
 16) Now that we have deleted the Volume Group, we will create a new and encrypted dm-crypt device:
 
@@ -215,13 +215,14 @@ You will see a series of prompts, to which you must answer YES, for example:
 
 During this process, you will be prompted to confirm that any existing data is deleted permanently and to enter your drive encryption passphrase (key):
 
-  WARNING!
-  ========
-  This will overwrite data on /dev/md1 irrevocably.
+```bash
+WARNING!
+========
+This will overwrite data on /dev/md1 irrevocably.
 
-  Are you sure? (Type uppercase yes): YES
-  Enter passphrase:
-  Verify passphrase:
+Are you sure? (Type uppercase yes): YES
+Enter passphrase:
+Verify passphrase:```
 
 17) "Open" the newly created dm-crypt device:
 
@@ -254,11 +255,12 @@ Be sure to adapt this to any customizations you expect to the original table pro
 
 22) We will now prepare the system for a chroot procedure. This allows us to assume the context of the installed operating system and run commands, even while we are still inside the rescue system.
 
-  mount /dev/md0 /mnt/boot
-  mount --bind /dev /mnt/dev
-  mount --bind /sys /mnt/sys
-  mount --bind /proc /mnt/proc
-  chroot /mnt
+```bash
+mount /dev/md0 /mnt/boot
+mount --bind /dev /mnt/dev
+mount --bind /sys /mnt/sys
+mount --bind /proc /mnt/proc
+chroot /mnt```
 
 23) We are now within the context of the installed operating system. We must configure it to recognize our encrypted block device:
 
@@ -280,43 +282,46 @@ This means that your authorized_keys file is in the wrong location. Fix this bef
 
 25) Once initramfs has been successfully updated, we will update the grub bootloader:
 
-  update-grub
-  grub-install /dev/sda
-  grub-install /dev/sdb
+```bash
+update-grub
+grub-install /dev/sda
+grub-install /dev/sdb```
 
 During ```update-grub``` you may receive the following warnings and errors:
 
-  Generating grub configuration file ...
-    WARNING: Failed to connect to lvmetad. Falling back to device scanning.
-    WARNING: Failed to connect to lvmetad. Falling back to device scanning.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  Found linux image: /boot/vmlinuz-4.15.0-29-generic
-  Found initrd image: /boot/initrd.img-4.15.0-29-generic
-  Found linux image: /boot/vmlinuz-4.15.0-24-generic
-  Found initrd image: /boot/initrd.img-4.15.0-24-generic
-    WARNING: Failed to connect to lvmetad. Falling back to device scanning.
-    WARNING: Failed to connect to lvmetad. Falling back to device scanning.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-  error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
-    WARNING: Failed to connect to lvmetad. Falling back to device scanning.
-  done
+```bash
+Generating grub configuration file ...
+  WARNING: Failed to connect to lvmetad. Falling back to device scanning.
+  WARNING: Failed to connect to lvmetad. Falling back to device scanning.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+Found linux image: /boot/vmlinuz-4.15.0-29-generic
+Found initrd image: /boot/initrd.img-4.15.0-29-generic
+Found linux image: /boot/vmlinuz-4.15.0-24-generic
+Found initrd image: /boot/initrd.img-4.15.0-24-generic
+  WARNING: Failed to connect to lvmetad. Falling back to device scanning.
+  WARNING: Failed to connect to lvmetad. Falling back to device scanning.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+error: cannot seek `/dev/mapper/cryptroot': Invalid argument.
+  WARNING: Failed to connect to lvmetad. Falling back to device scanning.
+done```
 
 These can generally be ignored. They occur because we are actually still inside the rescue system, which does not have the lvmetad service, but it will be available in our actual installation. The errors are caused during creation of the new configuration while running ```update-grub```. If we instead run ```grub-mkconfig```, we are able to see that the files /etc/grub.d/10_linux und /etc/grub.d/20_linux_xen are responsible for these errors. If we want to deactivate these error notices, we would need to remove the following code block from both files:
 
-  # btrfs may reside on multiple devices. We cannot pass them as value of root= parameter
-  # and mounting btrfs requires user space scanning, so force UUID in this case.
-  if [ "x${GRUB_DEVICE_UUID}" = "x" ] || [ "x${GRUB_DISABLE_LINUX_UUID}" = "xtrue" ] \
-    || ! test -e "/dev/disk/by-uuid/${GRUB_DEVICE_UUID}" \
-    || ( test -e "${GRUB_DEVICE}" && uses_abstraction "${GRUB_DEVICE}" lvm ); then
-  LINUX_ROOT_DEVICE=${GRUB_DEVICE}
-  else
-  LINUX_ROOT_DEVICE=UUID=${GRUB_DEVICE_UUID}
-  fi
+```bash
+# btrfs may reside on multiple devices. We cannot pass them as value of root= parameter
+# and mounting btrfs requires user space scanning, so force UUID in this case.
+if [ "x${GRUB_DEVICE_UUID}" = "x" ] || [ "x${GRUB_DISABLE_LINUX_UUID}" = "xtrue" ] \
+  || ! test -e "/dev/disk/by-uuid/${GRUB_DEVICE_UUID}" \
+  || ( test -e "${GRUB_DEVICE}" && uses_abstraction "${GRUB_DEVICE}" lvm ); then
+LINUX_ROOT_DEVICE=${GRUB_DEVICE}
+else
+LINUX_ROOT_DEVICE=UUID=${GRUB_DEVICE_UUID}
+fi```
 
 Afterwards, we can run the command ```update-grub``` once more.
 
