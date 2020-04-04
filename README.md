@@ -1,10 +1,13 @@
-Step translation of https://seeseekey.net/archive/122144/
+This is a translation and adaptation of the instructions found at https://seeseekey.net/archive/122144/. 
 
-ToDo: Modify with Cloudflare dm-crypt
+To Do:
+1. Translate more explanation text
+2. Modify with Cloudflare dm-crypt
 
 Pre-requisites:
-  - Your SSH key registered in Hetzner's "Robot" Web interface
+1. A registered SSH key in Hetzner's "Robot" Web Interface Key Management
 
+Guide:
 1\) Boot the server into Rescue Mode via the Hetzner "Robot" Web Interface.
 
 2\) Optional - Put your pre-configured installimage config into ´/autosetup´ using nano or vi
