@@ -8,6 +8,7 @@ Pre-requisites:
 1. A registered SSH key in Hetzner's "Robot" Web Interface Key Management
 
 Guide:
+
 1\) Boot the server into Rescue Mode via the Hetzner "Robot" Web Interface.
 
 2\) Optional - Put your pre-configured installimage config into ´/autosetup´ using nano or vi
