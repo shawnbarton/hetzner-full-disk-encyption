@@ -258,14 +258,14 @@ pvcreate /dev/mapper/cryptroot
 ```
 
 19\) Create a new Volume Group:
+
+**Be sure to adapt this to any customizations you made to the original partition table in Step 2.**
 ```bash
 vgcreate vg0 /dev/mapper/cryptroot
 
 lvcreate -n swap -L64G vg0
 lvcreate -n root -l100%FREE vg0
 ```
-
-**Be sure to adapt this to any customizations you made to the original partition table in Step 2.**
 
 20\) Create the Filesystem on each Logical Volume (corresponding to the Volume Groups in Step 19):
 ```bash
