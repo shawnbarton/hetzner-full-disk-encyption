@@ -5,9 +5,9 @@ ToDo: Modify with Cloudflare dm-crypt
 Pre-requisites:
   - Your SSH key registered in Hetzner's "Robot" Web interface
 
-1) Boot the server into Rescue Mode via the Hetzner "Robot" Web Interface.
+1\) Boot the server into Rescue Mode via the Hetzner "Robot" Web Interface.
 
-2) Optional - Put your pre-configured installimage config into ´/autosetup´ using nano or vi
+2\) Optional - Put your pre-configured installimage config into ´/autosetup´ using nano or vi
 
 Sample config:
 ```bash
@@ -43,32 +43,32 @@ LV vg0   root   /        ext4         all
 IMAGE /root/.oldroot/nfs/install/../images/Ubuntu-1804-bionic-64-minimal.tar.gz
 ```
 
-2.1) Run the command `installimage`. If a config is not already in place then it will prompt you to create one with some on-screen menus.
+2.1\) Run the command `installimage`. If a config is not already in place then it will prompt you to create one with some on-screen menus.
 
-3) Once the installation completes, reboot the server so that it boots into the newly installed operating system with the command `reboot`.
+3\) Once the installation completes, reboot the server so that it boots into the newly installed operating system with the command `reboot`.
 
-4) While the server is rebooting, create a new ssh key pair on your **local machine**. For example, using the command `ssh-keygen -t rsa -b 4096 -f .ssh/dropbear`.
+4\) While the server is rebooting, create a new ssh key pair on your **local machine**. For example, using the command `ssh-keygen -t rsa -b 4096 -f .ssh/dropbear`.
 
-5) Reconnect to the server (using your normal SSH key).
+5\) Reconnect to the server (using your normal SSH key).
 
-5.1) You may receive the error `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`. To fix this, you will need to remove the server fingerprint from your known_hosts file.
+5.1\) You may receive the error `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!`. To fix this, you will need to remove the server fingerprint from your known_hosts file.
 
-6) Once connected, update your apt repositories and upgrade any packages on the server using the command:
+6\) Once connected, update your apt repositories and upgrade any packages on the server using the command:
 ```bash
 apt-get update && apt-get dist-upgrade
 ```
 
-6.1) Install busybox and dropbear using the command:
+6.1\) Install busybox and dropbear using the command:
 ```bash
 apt-get install busybox dropbear-initramfs
 ```
 
-7) Edit the initramfs configuration using the following command:
+7\) Edit the initramfs configuration using the following command:
 ```bash
 nano /etc/initramfs-tools/initramfs.conf
 ```
 
-7.1) Replace the line:
+7.1\) Replace the line:
 ```bash
 BUSYBOX=auto
 ```
@@ -77,14 +77,14 @@ with:
 BUSYBOX=y
 ```
 
-8) Copy your SSH public key (generated in step 4, probably as .ssh/dropbear.pub, on your local system) into the dropbear authorized_keys file:
+8\) Copy your SSH public key (generated in step 4, probably as .ssh/dropbear.pub, on your local system) into the dropbear authorized_keys file:
 ```bash
 nano /etc/dropbear-initramfs/authorized_keys
 ```
 
 You can have multiple keys in this file. Using a separate SSH key for dropbear is optional. You can also use the same SSH key that you use to log in to the server.
 
-9) **Ubuntu 18.04 ONLY** In Ubuntu 18.04, there is a bug preventing drive decryption which requires us to apply the following workaround:
+9\) **Ubuntu 18.04 ONLY** In Ubuntu 18.04, there is a bug preventing drive decryption which requires us to apply the following workaround:
 ```bash
 cd /etc/initramfs-tools/hooks/
 nano cryptsetup-fix.sh
@@ -180,14 +180,14 @@ echo
 chmod +x cryptsetup-fix.sh
 ```
 
-10) Once more, enable **rescue mode** in Hetzner's "Robot" Web Interface and reboot the server:
+10\) Once more, enable **rescue mode** in Hetzner's "Robot" Web Interface and reboot the server:
 ```bash
 reboot
 ```
 
 Reconnect to the server using SSH once it has booted into rescue mode.
 
-11) We must now mount the LVM, since these are not automatically mounted to `/dev/mapper/`, we run the following commands:
+11\) We must now mount the LVM, since these are not automatically mounted to `/dev/mapper/`, we run the following commands:
 ```bash
 lvm vgscan -v
 lvm vgchange -a y
@@ -195,23 +195,23 @@ lvm vgchange -a y
 
 This will scan for existing Volume Groups and activate them.
 
-12) We can now mount the LVM using the command:
+12\) We can now mount the LVM using the command:
 ```bash
 mount /dev/mapper/vg0-root /mnt/
 ```
 
-13) Copy the existing Ubuntu installation, this may take a little while:
+13\) Copy the existing Ubuntu installation, this may take a little while:
 ```bash
 mkdir /oldroot/
 rsync -a /mnt/ /oldroot/
 ```
 
-14) Unmount LVM:
+14\) Unmount LVM:
 ```bash
 umount /mnt/
 ```
 
-15) We will now delete the existing Volume Group:
+15\) We will now delete the existing Volume Group:
 ```bash
 vgremove vg0
 ```
@@ -224,7 +224,7 @@ Do you really want to remove active logical volume root? [y/n]: y
   Logical volume "root" successfully removed
   Volume group "vg0" successfully removed
 ```
-16) Now that we have deleted the Volume Group, we will create a new and encrypted dm-crypt device:
+16\) Now that we have deleted the Volume Group, we will create a new and encrypted dm-crypt device:
 ```bash
 cryptsetup --cipher aes-xts-plain64 --key-size 256 --hash sha256 --iter-time=10000 luksFormat /dev/md1
 ```
@@ -241,19 +241,19 @@ Enter passphrase:
 Verify passphrase:
 ```
 
-17) "Open" the newly created dm-crypt device:
+17\) "Open" the newly created dm-crypt device:
 ```bash
 cryptsetup luksOpen /dev/md1 cryptroot
 ```
 
 You will be asked for your encryption key.
 
-18) Create a Physical Volume for "cryptroot":
+18\) Create a Physical Volume for "cryptroot":
 ```bash
 pvcreate /dev/mapper/cryptroot
 ```
 
-19) Create a new Volume Group:
+19\) Create a new Volume Group:
 ```bash
 vgcreate vg0 /dev/mapper/cryptroot
 
@@ -263,19 +263,19 @@ lvcreate -n root -l100%FREE vg0
 
 Be sure to adapt this to any customizations you expect to the original table provided with installimage in Step 2.
 
-20) Create the Filesystem on each Logical Volume (corresponding to the Volume Groups in Step 19):
+20\) Create the Filesystem on each Logical Volume (corresponding to the Volume Groups in Step 19):
 ```bash
 mkfs.ext4 /dev/vg0/root
 mkswap /dev/vg0/swap
 ```
 
-21) We will now restore our operating system onto the empty encrypted volumes:
+21\) We will now restore our operating system onto the empty encrypted volumes:
 ```bash
 mount /dev/vg0/root /mnt/
 rsync -a /oldroot/ /mnt/
 ```
 
-22) We will now prepare the system for a chroot procedure. This allows us to assume the context of the installed operating system and run commands, even while we are still inside the rescue system.
+22\) We will now prepare the system for a chroot procedure. This allows us to assume the context of the installed operating system and run commands, even while we are still inside the rescue system.
 
 ```bash
 mount /dev/md0 /mnt/boot
@@ -285,7 +285,7 @@ mount --bind /proc /mnt/proc
 chroot /mnt
 ```
 
-23) We are now within the context of the installed operating system. We must configure it to recognize our encrypted block device:
+23\) We are now within the context of the installed operating system. We must configure it to recognize our encrypted block device:
 ```bash
 nano /etc/crypttab
 ```
@@ -295,7 +295,7 @@ Add the following line:
 cryptroot /dev/md1 none luks
 ```
 
-24) We will now update initramfs with the following commmand:
+24\) We will now update initramfs with the following commmand:
 ```bash
 update-initramfs -u
 ```
@@ -307,7 +307,7 @@ dropbear: WARNING: Invalid authorized_keys file, remote unlocking of cryptroot v
 
 This means that your authorized_keys file is in the wrong location. Fix this before proceeding.
 
-25) Once initramfs has been successfully updated, we will update the grub bootloader:
+25\) Once initramfs has been successfully updated, we will update the grub bootloader:
 
 ```bash
 update-grub
@@ -355,7 +355,7 @@ fi
 
 Afterwards, we can run the command `update-grub` once more.
 
-26) We will now leave the chroot environment, unmount the directories, and reboot the server:
+26\) We will now leave the chroot environment, unmount the directories, and reboot the server:
 
 ```bash
 exit
@@ -364,7 +364,7 @@ umount /mnt
 sync
 reboot
 ```
-27) The server should now boot into dropbear. You will need to connect via SSH, using the correct keypair, and enter your drive encryption key to boot the system:
+27\) The server should now boot into dropbear. You will need to connect via SSH, using the correct keypair, and enter your drive encryption key to boot the system:
 
 ```bash
 ssh -i .ssh/dropbear root@server.example.org
@@ -390,4 +390,4 @@ Error: Timeout reached while waiting for PID 388.
 
 Regardless, several seconds later the server will terminate the SSH connection and boot the operating system. 
 
-28) Connect to the server using your normal SSH key pair. This was provided in the Hetzner "Robot" SSH key management at the time installimage was run during the first steps of this guide.
+28\) Connect to the server using your normal SSH key pair. This was provided in the Hetzner "Robot" SSH key management at the time installimage was run during the first steps of this guide.
