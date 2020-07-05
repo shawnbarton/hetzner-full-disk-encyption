@@ -319,6 +319,14 @@ grub-install /dev/sda
 grub-install /dev/sdb
 ```
 
+For nvme disks use:
+
+```bash
+update-grub
+grub-install /dev/nvme0n1
+grub-install /dev/nvme1n1
+```
+
 During `update-grub` you may receive the following warnings and errors:
 
 ```bash
