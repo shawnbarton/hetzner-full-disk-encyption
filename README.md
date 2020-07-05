@@ -183,7 +183,7 @@ echo
 ```bash
 chmod +x cryptsetup-fix.sh
 ```
-**Ubuntu 20.04 ONLY** In Ubuntu 20.04, there is a bug in which the hooks for cryptsetup are not added to initramfs-tools (?verify) upon installation.
+**Ubuntu 20.04 ONLY** In Ubuntu 20.04, there is some issue in which the hooks for cryptsetup are not added to initramfs-tools (?verify) upon installation.
 
 Working installation:
 ```bash
@@ -249,8 +249,7 @@ drwxr-xr-x 7 root root 4096 Jul  5 13:02 ../
 -rwxr-xr-x 1 root root  411 Feb 25 21:36 zz-dhclient*
 ```
 
-/lib/cryptsetup/ is present on working 18.04. Linked and present in /usr/lib/cryptsetup/ in 20.04.
-
+/lib/cryptsetup/ is present on working 18.04. Linked and present in /usr/lib/cryptsetup/ in 20.04. This means that there are no functions to actually unlock the drive when booting to dropbear. Unsure of fix.
 
 
 10\) Once more, enable **rescue mode** in Hetzner's "Robot" Web Interface and reboot the server:
