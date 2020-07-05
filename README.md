@@ -249,6 +249,10 @@ drwxr-xr-x 7 root root 4096 Jul  5 13:02 ../
 -rwxr-xr-x 1 root root  411 Feb 25 21:36 zz-dhclient*
 ```
 
+/lib/cryptsetup/ is present on working 18.04. Linked and present in /usr/lib/cryptsetup/ in 20.04.
+
+
+
 10\) Once more, enable **rescue mode** in Hetzner's "Robot" Web Interface and reboot the server:
 ```bash
 reboot
