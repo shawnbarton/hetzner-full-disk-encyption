@@ -1,8 +1,7 @@
-This is a translation and adaptation of the instructions found at https://seeseekey.net/archive/122144/. 
+The original basis for this document is a translation and adaptation of the instructions found at https://seeseekey.net/archive/122144/. 
 
 To Do:
 1. Translate more explanation text
-2. Modify with Cloudflare dm-crypt
 
 Pre-requisites:
 1. A registered SSH key in Hetzner's "Robot" Web Interface Key Management
