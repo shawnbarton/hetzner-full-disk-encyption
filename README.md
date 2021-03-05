@@ -63,7 +63,7 @@ apt-get update && apt-get dist-upgrade
 
 6.1\) Install busybox and dropbear using the command:
 ```bash
-apt-get install busybox dropbear-initramfs
+apt-get install busybox dropbear-initramfs cryptsetup-initramfs
 ```
 
 7\) Edit the initramfs configuration using the following command:
@@ -182,74 +182,6 @@ echo
 ```bash
 chmod +x cryptsetup-fix.sh
 ```
-**Ubuntu 20.04 ONLY** In Ubuntu 20.04, there is some issue in which the hooks for cryptsetup are not added to initramfs-tools (?verify) upon installation.
-
-Working installation:
-```bash
-$ ll /usr/share/initramfs-tools/hooks/
-total 144
-drwxr-xr-x 2 root root  4096 Jul  7  2019 ./
-drwxr-xr-x 7 root root  4096 Jul  7  2019 ../
--rwxr-xr-x 1 root root  3806 Jun 26  2018 amd64_microcode*
--rwxr-xr-x 1 root root   566 May 23  2018 btrfs*
--rwxr-xr-x 1 root root  3609 Apr  6  2018 compcache*
--rwxr-xr-x 1 root root  3142 Apr 23  2019 console_setup*
--rwxr-xr-x 1 root root   878 Aug  8  2018 cryptgnupg*
--rwxr-xr-x 1 root root   478 Aug  8  2018 cryptkeyctl*
--rwxr-xr-x 1 root root  1683 Aug  8  2018 cryptopensc*
--rwxr-xr-x 1 root root   888 Aug  8  2018 cryptpassdev*
--rwxr-xr-x 1 root root 17872 Aug  8  2018 cryptroot*
--rwxr-xr-x 1 root root   501 Aug  8  2018 cryptroot-unlock*
--rwxr-xr-x 1 root root   506 Dec  3  2017 dmsetup*
--rwxr-xr-x 1 root root  2767 Aug 24  2018 dropbear*
--rwxr-xr-x 1 root root   412 Apr  6  2018 fixrtc*
--rwxr-xr-x 1 root root   557 Oct 10  2018 framebuffer*
--rwxr-xr-x 1 root root  2179 Aug  3  2018 fsck*
--rwxr-xr-x 1 root root   230 Jul 30  2018 fuse*
--rwxr-xr-x 1 root root  4944 Jun 20  2019 intel_microcode*
--rwxr-xr-x 1 root root   301 Jan 22  2018 kbd*
--rwxr-xr-x 1 root root   843 Jan 26  2017 klibc-utils*
--rwxr-xr-x 1 root root   424 Nov 12  2018 kmod*
--rwxr-xr-x 1 root root   664 Dec  3  2017 lvm2*
--rwxr-xr-x 1 root root  2897 Apr 10  2019 mdadm*
--rwxr-xr-x 1 root root  5275 Mar 20  2019 plymouth*
--rwxr-xr-x 1 root root  2259 Aug  3  2018 resume*
--rwxr-xr-x 1 root root  1275 Apr  6  2018 thermal*
--rwxr-xr-x 1 root root  1699 Apr 24  2019 udev*
--rwxr-xr-x 1 root root  1359 Mar  6  2019 zz-busybox-initramfs*
--rwxr-xr-x 1 root root   411 Oct 12  2017 zz-dhclient*
-```
-Broken installation:
-```bash
-# ll /usr/share/initramfs-tools/hooks/
-total 96
-drwxr-xr-x 2 root root 4096 Jul  5 13:03 ./
-drwxr-xr-x 7 root root 4096 Jul  5 13:02 ../
--rwxr-xr-x 1 root root 3856 Feb 16 08:43 amd64_microcode*
--rwxr-xr-x 1 root root  568 Feb 15 16:52 btrfs*
--rwxr-xr-x 1 root root 3633 Feb 14 15:29 compcache*
--rwxr-xr-x 1 root root 3142 Mar 27 11:10 console_setup*
--rwxr-xr-x 1 root root  506 Jan 28 04:44 dmsetup*
--rwxr-xr-x 1 root root 1815 Sep  5  2019 dropbear*
--rwxr-xr-x 1 root root  436 Feb 14 15:29 fixrtc*
--rwxr-xr-x 1 root root  579 Feb 14 15:29 framebuffer*
--rwxr-xr-x 1 root root 1983 Feb 15 01:42 fsck*
--rwxr-xr-x 1 root root 4944 Jun 10 22:36 intel_microcode*
--rwxr-xr-x 1 root root  301 May  9  2019 kbd*
--rwxr-xr-x 1 root root  646 Oct 22  2019 klibc-utils*
--rwxr-xr-x 1 root root  432 Feb 19 10:12 kmod*
--rwxr-xr-x 1 root root  670 Jan 28 04:44 lvm2*
--rwxr-xr-x 1 root root 2897 Jan 23 19:41 mdadm*
--rwxr-xr-x 1 root root 3116 Feb 15 01:42 resume*
--rwxr-xr-x 1 root root 1324 Feb 15 01:42 thermal*
--rwxr-xr-x 1 root root 1703 May  7 15:21 udev*
--rwxr-xr-x 1 root root  850 Mar  3 21:42 xfs*
--rwxr-xr-x 1 root root 2233 May 19 17:16 zz-busybox-initramfs*
--rwxr-xr-x 1 root root  411 Feb 25 21:36 zz-dhclient*
-```
-
-/lib/cryptsetup/ is present on working 18.04. Linked and present in /usr/lib/cryptsetup/ in 20.04. This means that there are no functions to actually unlock the drive when booting to dropbear. Unsure of fix.
-
 
 10\) Once more, enable **rescue mode** in Hetzner's "Robot" Web Interface and reboot the server:
 ```bash
